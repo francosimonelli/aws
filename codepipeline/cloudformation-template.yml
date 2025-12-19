@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Sample CodePipeline deploying CloudFormation
+
+Parameters:
+  GitHubOwner:
+    Type: String
+  GitHubRepo:
+    Type: String
+  GitHubBranch:
+    Type: String
+    Default: main
+  GitHubOAuthToken:
+    Type: String
+    NoEcho: true
+
+Resources:
+  ArtifactBucket:
+    Type: AWS::S3::Bucket
+
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AdministratorAccess
+
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: cloudformation.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AdministratorAccess
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: CodePipelineRole.Arn
+      ArtifactStore:
+        Type: S3
+        Location: ArtifactBucket
+      Stages:
+      - Name: Source
+        Actions:
+        - Name: GitHub_Source
+          ActionTypeId:
+            Category: Source
+            Owner: ThirdParty
+            Provider: GitHub
+            Version: '1'
+          OutputArtifacts:
+          - Name: SourceOutput
+          Configuration:
+            Owner: GitHubOwner
+            Repo: GitHubRepo
+            Branch: GitHubBranch
+            OAuthToken: GitHubOAuthToken
+          RunOrder: 1
+
+      - Name: Deploy
+        Actions:
+        - Name: CFN_Deploy
+          ActionTypeId:
+            Category: Deploy
+            Owner: AWS
+            Provider: CloudFormation
+            Version: '1'
+          InputArtifacts:
+          - Name: SourceOutput
+          Configuration:
+            ActionMode: CREATE_UPDATE
+            StackName: sample-app-stack
+            Capabilities: CAPABILITY_NAMED_IAM
+            RoleArn: CloudFormationRole.Arn
+            TemplatePath: SourceOutput::template.yaml
+          RunOrder: 1
