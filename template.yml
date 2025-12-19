@@ -1,8 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Demo CF template
+Parameters:
+  DemoBucketVersioningConfiguration:
+    Type: String
+    Default: "Enabled"
+    Description: "Versioning enabled or disabled"
 
 Resources:
   DemoBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub demo-bucket-${AWS::AccountId}-${AWS::Region}
+      VersioningConfiguration: !Ref DemoBucketVersioningConfiguration
