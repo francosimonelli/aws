@@ -3,7 +3,7 @@ Description: Demo CF template
 Parameters:
   DemoBucketVersioningConfiguration:
     Type: String
-    Default: "Enabled"
+    Default: Enabled
     Description: "Versioning enabled or disabled"
 
 Resources:
