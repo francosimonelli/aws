@@ -46,10 +46,10 @@ Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      RoleArn: CodePipelineRole.Arn
+      RoleArn: !GetAtt CodePipelineRole.Arn
       ArtifactStore:
         Type: S3
-        Location: ArtifactBucket
+        Location: !Ref ArtifactBucket
       Stages:
       - Name: Source
         Actions:
@@ -62,10 +62,10 @@ Resources:
           OutputArtifacts:
           - Name: SourceOutput
           Configuration:
-            Owner: GitHubOwner
-            Repo: GitHubRepo
-            Branch: GitHubBranch
-            OAuthToken: GitHubOAuthToken
+            Owner: !Ref GitHubOwner
+            Repo: !Ref GitHubRepo
+            Branch: !Ref GitHubBranch
+            OAuthToken: !Ref GitHubOAuthToken
           RunOrder: 1
 
       - Name: Deploy
@@ -82,6 +82,6 @@ Resources:
             ActionMode: CREATE_UPDATE
             StackName: sample-app-stack
             Capabilities: CAPABILITY_NAMED_IAM
-            RoleArn: CloudFormationRole.Arn
+            RoleArn: !GetAtt CloudFormationRole.Arn
             TemplatePath: SourceOutput::template.yaml
           RunOrder: 1
